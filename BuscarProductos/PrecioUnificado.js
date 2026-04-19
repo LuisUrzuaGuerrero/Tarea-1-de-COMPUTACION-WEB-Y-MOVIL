@@ -11,5 +11,15 @@ function mostrarPrecio(numero) {
 }
 */
 
-function ConvertirPrecio(n){
+function convertirPrecio(precio){
+  if(precio < 0){
+    return "Precio Inválido";
+  }
+  let conversiónTemporal = precio.toString();
+  let resul = "";
+    while(conversiónTemporal.length > 3){
+      resul = "." + conversiónTemporal.slice(-3) + resul;
+      conversiónTemporal = conversiónTemporal.slice(0, -3);
+  }
+    return "$" + conversiónTemporal + resul;
 }
