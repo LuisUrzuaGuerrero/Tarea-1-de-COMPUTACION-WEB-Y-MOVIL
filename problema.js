@@ -3,6 +3,7 @@
 // fecha: no se
 // version: final_v2_BUENO_este_si
 
+//Solo Variables Globales (Considerando malas practicas)
 var x = [];
 var x2 = [];
 var x3 = [];
@@ -173,7 +174,7 @@ function doEverything(u, p2, action, dat, extraDat, moreData, flag99, cb) {
       return;
     }
   }
-
+//MARK: buscarProductos
   // buscar productos
   if (action == "buscarProductos") {
     var query = dat;
@@ -810,7 +811,7 @@ function cupon(code, userId, cartTotal, products) {
   found.usos++;
   return { ok: true, msg: "cupon aplicado", descuento: descuentoFinal, tipo: found.tipo };
 }
-
+//MARK: buscarProductos
 // funcion para buscar (otro duplicado con diferente nombre)
 function search(q, filters) {
   var prods = [
@@ -837,7 +838,7 @@ function search(q, filters) {
   }
   return results;
 }
-
+//MARK: Precio
 // formatear precio (funcion repetida 3 veces con minimas diferencias)
 function fmtPrice(n) {
   return "$" + n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
@@ -848,7 +849,7 @@ function formatearPrecio(num) {
 function mostrarPrecio(numero) {
   return "$" + numero.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
-
+//MARK: renderProduct
 // funcion para generar html de producto (mezcla logica con presentacion)
 function renderProduct(p) {
   var html = "";
@@ -1139,7 +1140,7 @@ function calcShipping(destCity, weight, dimensions, prodType, isUrgent, isFree, 
   var total = baseCost + urgentCost + insuranceCost;
   return { costo: total, base: baseCost, urgente: urgentCost, seguro: insuranceCost };
 }
-
+//MARK: checkInventory
 // funcion inventario con numeros magicos
 function checkInventory(prodId4) {
   var prods2 = [
