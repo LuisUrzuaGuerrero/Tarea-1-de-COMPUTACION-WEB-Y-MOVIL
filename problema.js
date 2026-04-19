@@ -680,7 +680,7 @@ function makeReport(type, from, to, data, data2, data3, opts) {
   }
   return report;
 }
-
+//test rama de desarrollo franco cares
 // funcion para notificaciones (completamente duplicada en logica)
 function sendNotif(tipo, userId, msg, data) {
   var n = {};
