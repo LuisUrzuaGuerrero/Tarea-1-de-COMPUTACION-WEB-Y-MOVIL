@@ -1,4 +1,4 @@
-//Función Mal Hecha de Chequeo de Inventario
+//Función Mal Hecha (Hardcodeada y con números "mágicos") de Chequeo de Inventario
 /*
 function checkInventory(prodId4) {
   var prods2 = [
@@ -23,13 +23,15 @@ function checkInventory(prodId4) {
   return { ok: true, prodId: prodId4, stock: prod3.stock, status: status, color: color, alerta: alerta };
 }
   */
+
+
 //Niveles Del Inventario
 const NivelesInventario = [
-  { Estado: "Agotado", Color: "red", Alerta: true, Limite: 0  },
-  { Estado: "Crítico", Color: "orange", Alerta: true, Limite: 5  },
-  { Estado: "Bajo", Color: "yellow", Alerta: true, Limite: 15  },
-  { Estado: "Normal", Color: "green", Alerta: false, Limite: 30  },
-  { Estado: "Alto", Color: "green", Alerta: false, Limite: Infinity  }
+  { Estado: "Agotado", Alerta: true, Limite: 0  },
+  { Estado: "Crítico", Alerta: true, Limite: 5  },
+  { Estado: "Bajo", Alerta: true, Limite: 15  },
+  { Estado: "Normal", Alerta: false, Limite: 30  },
+  { Estado: "Alto", Alerta: false, Limite: Infinity  }
 ];
 
 //Busqueda Objeto que sea True, retornando así sus detalles en base al Stock Actual
@@ -38,6 +40,6 @@ function CalcularRango (Stock){
     return "Entrada Inválida";
   }else{
     const NivelFinal = NivelesInventario.find(nivelTemp => Stock <= nivelTemp.Limite);
-    return { Estado: NivelFinal.Estado, Color: NivelFinal.Color, Alerta: NivelFinal.Alerta };
+    return { Estado: NivelFinal.Estado, Alerta: NivelFinal.Alerta };
   }
 }
