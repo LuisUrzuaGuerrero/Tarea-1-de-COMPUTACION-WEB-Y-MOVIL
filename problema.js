@@ -578,91 +578,29 @@ function calc(p, d, d2, d3, iva, envio, cuotas) {
   };
 }
 
-// funcion de reporte
-function makeReport(type, from, to, data, data2, data3, opts) {
-  var report = "";
-  var lines = [];
-  var totalGeneral = 0;
-  var totalGeneral2 = 0;
-  var totalGeneral3 = 0;
-  var count = 0;
-  var count2 = 0;
-  var count3 = 0;
-  var avg = 0;
-  var avg2 = 0;
-  var avg3 = 0;
-  var max = 0;
-  var max2 = 0;
-  var max3 = 0;
-  var min = 999999999;
-  var min2 = 999999999;
-  var min3 = 999999999;
-  
-  if (type == "ventas") {
-    report += "=== REPORTE DE VENTAS ===\n";
-    report += "Desde: " + from + "\n";
-    report += "Hasta: " + to + "\n";
-    report += "========================\n";
-    for (var i = 0; i < data.length; i++) {
-      var venta = data[i];
-      totalGeneral = totalGeneral + venta.total;
-      count++;
-      if (venta.total > max) max = venta.total;
-      if (venta.total < min) min = venta.total;
-      lines.push("Orden: " + venta.id + " | Total: $" + venta.total + " | Estado: " + venta.estado);
-    }
-    avg = count > 0 ? totalGeneral / count : 0;
-    report += lines.join("\n");
-    report += "\n------------------------\n";
-    report += "Total ordenes: " + count + "\n";
-    report += "Total ingresos: $" + totalGeneral + "\n";
-    report += "Promedio por orden: $" + avg + "\n";
-    report += "Venta maxima: $" + max + "\n";
-    report += "Venta minima: $" + min + "\n";
-  }
-  if (type == "productos") {
-    report += "=== REPORTE DE PRODUCTOS ===\n";
-    report += "Desde: " + from + "\n";
-    report += "Hasta: " + to + "\n";
-    report += "============================\n";
-    for (var i = 0; i < data.length; i++) {
-      var prod2 = data[i];
-      totalGeneral2 = totalGeneral2 + prod2.prec;
-      count2++;
-      if (prod2.prec > max2) max2 = prod2.prec;
-      if (prod2.prec < min2) min2 = prod2.prec;
-      lines.push("Producto: " + prod2.nom + " | Precio: $" + prod2.prec + " | Stock: " + prod2.stock + " | Rating: " + prod2.rating);
-    }
-    avg2 = count2 > 0 ? totalGeneral2 / count2 : 0;
-    report += lines.join("\n");
-    report += "\n----------------------------\n";
-    report += "Total productos: " + count2 + "\n";
-    report += "Precio promedio: $" + avg2 + "\n";
-    report += "Precio maximo: $" + max2 + "\n";
-    report += "Precio minimo: $" + min2 + "\n";
-  }
-  if (type == "usuarios") {
-    report += "=== REPORTE DE USUARIOS ===\n";
-    report += "Desde: " + from + "\n";
-    report += "Hasta: " + to + "\n";
-    report += "===========================\n";
-    for (var i = 0; i < data.length; i++) {
-      var usr2 = data[i];
-      totalGeneral3 = totalGeneral3 + usr2.puntos;
-      count3++;
-      if (usr2.puntos > max3) max3 = usr2.puntos;
-      if (usr2.puntos < min3) min3 = usr2.puntos;
-      lines.push("Usuario: " + usr2.nombre + " | Email: " + usr2.email + " | Tipo: " + usr2.tipo + " | Puntos: " + usr2.puntos + " | Activo: " + usr2.activo);
-    }
-    avg3 = count3 > 0 ? totalGeneral3 / count3 : 0;
-    report += lines.join("\n");
-    report += "\n---------------------------\n";
-    report += "Total usuarios: " + count3 + "\n";
-    report += "Puntos promedio: " + avg3 + "\n";
-    report += "Max puntos: " + max3 + "\n";
-    report += "Min puntos: " + min3 + "\n";
-  }
-  return report;
+// funcion de reporte para los 3 tipos de reportes (ventas, productos, usuarios)
+function makeReport(type, from, to, data) {
+  const CONFIGS = {
+    ventas:    { title: "VENTAS",    field: "total",  rowFn: (v) => `Orden: ${v.id} | Total: $${v.total} | Estado: ${v.estado}` },
+    productos: { title: "PRODUCTOS", field: "prec",   rowFn: (p) => `Producto: ${p.nom} | Precio: $${p.prec} | Stock: ${p.stock}` },
+    usuarios:  { title: "USUARIOS",  field: "puntos", rowFn: (u) => `Usuario: ${u.nombre} | Email: ${u.email} | Puntos: ${u.puntos}` },
+  };
+
+  const config = CONFIGS[type];
+  if (!config) return `Tipo no reconocido: "${type}"`;
+
+  const values = data.map(item => item[config.field]);
+  const total  = values.reduce((acc, v) => acc + v, 0);
+  const avg    = total / values.length;
+  const max    = Math.max(...values);
+  const min    = Math.min(...values);
+
+  return [
+    `=== REPORTE DE ${config.title} ===`,
+    `Desde: ${from} | Hasta: ${to}`,
+    data.map(config.rowFn).join("\n"),
+    `Total: ${data.length} | Suma: $${total} | Promedio: $${avg.toFixed(2)} | Máx: $${max} | Mín: $${min}`,
+  ].join("\n");
 }
 //test rama de desarrollo franco cares
 // funcion para notificaciones (completamente duplicada en logica)
