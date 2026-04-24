@@ -404,61 +404,45 @@ function doEverything(u, p2, action, dat, extraDat, moreData, flag99, cb) {
     return;
   }
 
-  // obtener estadisticas
-  if (action == "getStats") {
-    var stats = {};
-    // total usuarios
-    var totalUsers = 0;
-    var totalActivos = 0;
-    var totalBloqueados = 0;
-    var totalAdmin = 0;
-    var totalClientes = 0;
-    var totalVendedores = 0;
-    for (var i = 0; i < dbUsers.length; i++) {
-      totalUsers++;
-      if (dbUsers[i].activo == true) totalActivos++;
-      if (dbUsers[i].bloqueado == true) totalBloqueados++;
-      if (dbUsers[i].tipo == "admin") totalAdmin++;
-      if (dbUsers[i].tipo == "cliente") totalClientes++;
-      if (dbUsers[i].tipo == "vendedor") totalVendedores++;
-    }
-    // total productos
-    var totalProds = 0;
-    var totalActivos2 = 0;
-    var totalInactivos = 0;
-    var totalElectronica = 0;
-    var totalAccesorios = 0;
-    var totalAudio = 0;
-    var totalAlmacenamiento = 0;
-    var totalComponentes = 0;
-    var totalMuebles = 0;
-    var stockTotal = 0;
-    var valorInventario = 0;
-    for (var i = 0; i < dbProducts.length; i++) {
-      totalProds++;
-      if (dbProducts[i].activo == true) totalActivos2++;
-      if (dbProducts[i].activo == false) totalInactivos++;
-      if (dbProducts[i].cat == "electronica") totalElectronica++;
-      if (dbProducts[i].cat == "accesorios") totalAccesorios++;
-      if (dbProducts[i].cat == "audio") totalAudio++;
-      if (dbProducts[i].cat == "almacenamiento") totalAlmacenamiento++;
-      if (dbProducts[i].cat == "componentes") totalComponentes++;
-      if (dbProducts[i].cat == "muebles") totalMuebles++;
-      stockTotal = stockTotal + dbProducts[i].stock;
-      valorInventario = valorInventario + (dbProducts[i].prec * dbProducts[i].stock);
-    }
-    stats.usuarios = { total: totalUsers, activos: totalActivos, bloqueados: totalBloqueados, admin: totalAdmin, clientes: totalClientes, vendedores: totalVendedores };
-    stats.productos = { total: totalProds, activos: totalActivos2, inactivos: totalInactivos, porCategoria: { electronica: totalElectronica, accesorios: totalAccesorios, audio: totalAudio, almacenamiento: totalAlmacenamiento, componentes: totalComponentes, muebles: totalMuebles }, stockTotal: stockTotal, valorInventario: valorInventario };
-    cb({ ok: true, msg: "ok", data: stats });
-    return;
-  }
-
+// obtener estadisticas llamando a la funcion getstats
+ if (action == "getStats") {
+  getStats(dbUsers, dbProducts, cb);
+  return
   cb({ ok: false, msg: "accion no reconocida", data: null });
 }
 
 // =====================================
 // mas funciones con malas practicas
 // =====================================
+//Funcion del getstat para su uso en el DoEverything
+function getStats(dbUsers, dbProducts, cb) {
+  const userStats = {
+    total: dbUsers.length,
+    activos: 0,
+    bloqueados: 0,
+    porTipo:{admin: 0, clientes: 0, vendedor: 0},
+  };
+  for (const user of dbUsers) {
+    if (user.activo) userStats.activos++;
+    if (user.bloqueado) userStats.bloqueados++;
+    if (user.tipo in userStats.porTipo) userStats.porTipo[user.tipo]++;
+  }
+  const productStats = {
+    total: dbProducts.length,
+    activos: 0,
+    inactivos: 0,
+    porCategoria: {},
+    stockTotal: 0,
+    valorInventario: 0,
+  };
+  for (const prod of dbProducts) {
+    prod.activo ? productStats.activos++ : productStats.inactivos++;
+    productStats.porCategoria[prod.cat] = (productStats.porCategoria[prod.cat] || 0) + 1;
+    productStats.stockTotal += prod.stock;
+    productStats.valorInventario += prod.stock * prod.prec;
+  }
+  cb({ ok: true, msg: "ok", data: { usuarios: userStats, productos: productStats } });
+}
 
 // funcion para validar TODO
 function v(cosa, tipo) {
