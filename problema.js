@@ -404,61 +404,45 @@ function doEverything(u, p2, action, dat, extraDat, moreData, flag99, cb) {
     return;
   }
 
-  // obtener estadisticas
-  if (action == "getStats") {
-    var stats = {};
-    // total usuarios
-    var totalUsers = 0;
-    var totalActivos = 0;
-    var totalBloqueados = 0;
-    var totalAdmin = 0;
-    var totalClientes = 0;
-    var totalVendedores = 0;
-    for (var i = 0; i < dbUsers.length; i++) {
-      totalUsers++;
-      if (dbUsers[i].activo == true) totalActivos++;
-      if (dbUsers[i].bloqueado == true) totalBloqueados++;
-      if (dbUsers[i].tipo == "admin") totalAdmin++;
-      if (dbUsers[i].tipo == "cliente") totalClientes++;
-      if (dbUsers[i].tipo == "vendedor") totalVendedores++;
-    }
-    // total productos
-    var totalProds = 0;
-    var totalActivos2 = 0;
-    var totalInactivos = 0;
-    var totalElectronica = 0;
-    var totalAccesorios = 0;
-    var totalAudio = 0;
-    var totalAlmacenamiento = 0;
-    var totalComponentes = 0;
-    var totalMuebles = 0;
-    var stockTotal = 0;
-    var valorInventario = 0;
-    for (var i = 0; i < dbProducts.length; i++) {
-      totalProds++;
-      if (dbProducts[i].activo == true) totalActivos2++;
-      if (dbProducts[i].activo == false) totalInactivos++;
-      if (dbProducts[i].cat == "electronica") totalElectronica++;
-      if (dbProducts[i].cat == "accesorios") totalAccesorios++;
-      if (dbProducts[i].cat == "audio") totalAudio++;
-      if (dbProducts[i].cat == "almacenamiento") totalAlmacenamiento++;
-      if (dbProducts[i].cat == "componentes") totalComponentes++;
-      if (dbProducts[i].cat == "muebles") totalMuebles++;
-      stockTotal = stockTotal + dbProducts[i].stock;
-      valorInventario = valorInventario + (dbProducts[i].prec * dbProducts[i].stock);
-    }
-    stats.usuarios = { total: totalUsers, activos: totalActivos, bloqueados: totalBloqueados, admin: totalAdmin, clientes: totalClientes, vendedores: totalVendedores };
-    stats.productos = { total: totalProds, activos: totalActivos2, inactivos: totalInactivos, porCategoria: { electronica: totalElectronica, accesorios: totalAccesorios, audio: totalAudio, almacenamiento: totalAlmacenamiento, componentes: totalComponentes, muebles: totalMuebles }, stockTotal: stockTotal, valorInventario: valorInventario };
-    cb({ ok: true, msg: "ok", data: stats });
-    return;
-  }
-
+// obtener estadisticas llamando a la funcion getstats
+ if (action == "getStats") {
+  getStats(dbUsers, dbProducts, cb);
+  return
   cb({ ok: false, msg: "accion no reconocida", data: null });
 }
 
 // =====================================
 // mas funciones con malas practicas
 // =====================================
+//Funcion del getstat para su uso en el DoEverything
+function getStats(dbUsers, dbProducts, cb) {
+  const userStats = {
+    total: dbUsers.length,
+    activos: 0,
+    bloqueados: 0,
+    porTipo:{admin: 0, clientes: 0, vendedor: 0},
+  };
+  for (const user of dbUsers) {
+    if (user.activo) userStats.activos++;
+    if (user.bloqueado) userStats.bloqueados++;
+    if (user.tipo in userStats.porTipo) userStats.porTipo[user.tipo]++;
+  }
+  const productStats = {
+    total: dbProducts.length,
+    activos: 0,
+    inactivos: 0,
+    porCategoria: {},
+    stockTotal: 0,
+    valorInventario: 0,
+  };
+  for (const prod of dbProducts) {
+    prod.activo ? productStats.activos++ : productStats.inactivos++;
+    productStats.porCategoria[prod.cat] = (productStats.porCategoria[prod.cat] || 0) + 1;
+    productStats.stockTotal += prod.stock;
+    productStats.valorInventario += prod.stock * prod.prec;
+  }
+  cb({ ok: true, msg: "ok", data: { usuarios: userStats, productos: productStats } });
+}
 
 // funcion para validar TODO
 function v(cosa, tipo) {
@@ -594,93 +578,31 @@ function calc(p, d, d2, d3, iva, envio, cuotas) {
   };
 }
 
-// funcion de reporte
-function makeReport(type, from, to, data, data2, data3, opts) {
-  var report = "";
-  var lines = [];
-  var totalGeneral = 0;
-  var totalGeneral2 = 0;
-  var totalGeneral3 = 0;
-  var count = 0;
-  var count2 = 0;
-  var count3 = 0;
-  var avg = 0;
-  var avg2 = 0;
-  var avg3 = 0;
-  var max = 0;
-  var max2 = 0;
-  var max3 = 0;
-  var min = 999999999;
-  var min2 = 999999999;
-  var min3 = 999999999;
-  
-  if (type == "ventas") {
-    report += "=== REPORTE DE VENTAS ===\n";
-    report += "Desde: " + from + "\n";
-    report += "Hasta: " + to + "\n";
-    report += "========================\n";
-    for (var i = 0; i < data.length; i++) {
-      var venta = data[i];
-      totalGeneral = totalGeneral + venta.total;
-      count++;
-      if (venta.total > max) max = venta.total;
-      if (venta.total < min) min = venta.total;
-      lines.push("Orden: " + venta.id + " | Total: $" + venta.total + " | Estado: " + venta.estado);
-    }
-    avg = count > 0 ? totalGeneral / count : 0;
-    report += lines.join("\n");
-    report += "\n------------------------\n";
-    report += "Total ordenes: " + count + "\n";
-    report += "Total ingresos: $" + totalGeneral + "\n";
-    report += "Promedio por orden: $" + avg + "\n";
-    report += "Venta maxima: $" + max + "\n";
-    report += "Venta minima: $" + min + "\n";
-  }
-  if (type == "productos") {
-    report += "=== REPORTE DE PRODUCTOS ===\n";
-    report += "Desde: " + from + "\n";
-    report += "Hasta: " + to + "\n";
-    report += "============================\n";
-    for (var i = 0; i < data.length; i++) {
-      var prod2 = data[i];
-      totalGeneral2 = totalGeneral2 + prod2.prec;
-      count2++;
-      if (prod2.prec > max2) max2 = prod2.prec;
-      if (prod2.prec < min2) min2 = prod2.prec;
-      lines.push("Producto: " + prod2.nom + " | Precio: $" + prod2.prec + " | Stock: " + prod2.stock + " | Rating: " + prod2.rating);
-    }
-    avg2 = count2 > 0 ? totalGeneral2 / count2 : 0;
-    report += lines.join("\n");
-    report += "\n----------------------------\n";
-    report += "Total productos: " + count2 + "\n";
-    report += "Precio promedio: $" + avg2 + "\n";
-    report += "Precio maximo: $" + max2 + "\n";
-    report += "Precio minimo: $" + min2 + "\n";
-  }
-  if (type == "usuarios") {
-    report += "=== REPORTE DE USUARIOS ===\n";
-    report += "Desde: " + from + "\n";
-    report += "Hasta: " + to + "\n";
-    report += "===========================\n";
-    for (var i = 0; i < data.length; i++) {
-      var usr2 = data[i];
-      totalGeneral3 = totalGeneral3 + usr2.puntos;
-      count3++;
-      if (usr2.puntos > max3) max3 = usr2.puntos;
-      if (usr2.puntos < min3) min3 = usr2.puntos;
-      lines.push("Usuario: " + usr2.nombre + " | Email: " + usr2.email + " | Tipo: " + usr2.tipo + " | Puntos: " + usr2.puntos + " | Activo: " + usr2.activo);
-    }
-    avg3 = count3 > 0 ? totalGeneral3 / count3 : 0;
-    report += lines.join("\n");
-    report += "\n---------------------------\n";
-    report += "Total usuarios: " + count3 + "\n";
-    report += "Puntos promedio: " + avg3 + "\n";
-    report += "Max puntos: " + max3 + "\n";
-    report += "Min puntos: " + min3 + "\n";
-  }
-  return report;
-}
+// funcion de reporte para los 3 tipos de reportes (ventas, productos, usuarios)
+function makeReport(type, from, to, data) {
+  const CONFIGS = {
+    ventas:    { title: "VENTAS",    field: "total",  rowFn: (v) => `Orden: ${v.id} | Total: $${v.total} | Estado: ${v.estado}` },
+    productos: { title: "PRODUCTOS", field: "prec",   rowFn: (p) => `Producto: ${p.nom} | Precio: $${p.prec} | Stock: ${p.stock}` },
+    usuarios:  { title: "USUARIOS",  field: "puntos", rowFn: (u) => `Usuario: ${u.nombre} | Email: ${u.email} | Puntos: ${u.puntos}` },
+  };
 
+  const config = CONFIGS[type];
+  if (!config) return `Tipo no reconocido: "${type}"`;
+
+  const values = data.map(item => item[config.field]);
+  const total  = values.reduce((acc, v) => acc + v, 0);
+  const avg    = total / values.length;
+  const max    = Math.max(...values);
+  const min    = Math.min(...values);
+
+  return [
+    `=== REPORTE DE ${config.title} ===`,
+    `Desde: ${from} | Hasta: ${to}`,
+    data.map(config.rowFn).join("\n"),
+    `Total: ${data.length} | Suma: $${total} | Promedio: $${avg.toFixed(2)} | Máx: $${max} | Mín: $${min}`,
+  ].join("\n");
+}
+//test rama de desarrollo franco cares
 // funcion para notificaciones (completamente duplicada en logica)
 function sendNotif(tipo, userId, msg, data) {
   var n = {};
