@@ -1,4 +1,4 @@
-//MARK: searchProducts
+//MARK: buscarProductos(de doEverything...)
 //Función 1 de buscar Productos en doEverything, totalmente espaguethi
 //PD: Agregaré comentarios adicionales porque se lee horrible, realmente me pierdo... >:(
 
@@ -77,7 +77,7 @@
 */
 //---------------------------------------------------------------------------
 
-
+//MARK: buscarProductos(de search)
 //Search en el archivo , Duplicado con el de arriba que esta en el doEverything xdd (Función 2 = Función 1 ??????)
 /*
 
@@ -129,9 +129,59 @@ function search(q, filters) {
 }
   */
 
+/*
+//MARK: Busqueda de Productos bosai
 
+function buscarProductos(productos, query, categoria, precioMin = 0, precioMax = Infinity) {
+  return productos
+    .filter(producto => {
+      if (!producto.activo) return false;
+      if (query && !coincideConBusqueda(producto, query)) return false;
+      if (categoria && producto.cat !== categoria) return false;
+      if (producto.prec < precioMin || producto.prec > precioMax) return false;
+      return true;
+    })
+    .sort((a, b) => b.rating - a.rating);
+}
 
+function coincideConBusqueda(producto, query) {
+  const q = query.toLowerCase();
+  const enNombre = producto.nom.toLowerCase().includes(q);
+  const enDescripcion = producto.desc.toLowerCase().includes(q);
+  const enTags = producto.tags.some(tag => tag.toLowerCase().includes(q));
+  return enNombre || enDescripcion || enTags;
+}
+*/
 
-let hola = 1 + 1;
+//Función ql
 
-console.log(hola);
+function busquedaDeProductos(productos, entrada, categoria, precioMin = 0, precioMax = Infinity) {
+  let resultado = productos.filter(product => product.activo);
+
+  resultado = resultado.filter(product => coincideConBusqueda(product, entrada));
+  resultado = resultado.filter(product => coincideConCategoria(product, categoria));
+  resultado = resultado.filter(product => estaDentroDePrecio(product, precioMin, precioMax));
+
+  return resultado.sort((a, b) => b.rating - a.rating);
+}
+
+function coincideConBusqueda(producto, entrada) {
+  if (!entrada) 
+    return true;
+  const bajarLetra = entrada.toLowerCase();
+  return (
+    producto.nombre.toLowerCase().includes(bajarLetra) ||
+     producto.descripcion.toLowerCase().includes(bajarLetra) ||
+      producto.tags.some(tag => tag.toLowerCase().includes(bajarLetra))
+  );
+}
+
+function coincideConCategoria(producto, categoria) {
+  if (!categoria) 
+    return true;
+  return producto.categoria === categoria;
+}
+
+function estaDentroDePrecio(producto, precioMin, precioMax) {
+  return producto.precio >= precioMin && producto.precio <= precioMax;
+}
