@@ -3,8 +3,6 @@
 // fecha: no se
 // version: final_v2_BUENO_este_si
 
-//cambio de prueba que el maxi kl no me entiende bosai
-
 var x = [];
 var x2 = [];
 var x3 = [];
