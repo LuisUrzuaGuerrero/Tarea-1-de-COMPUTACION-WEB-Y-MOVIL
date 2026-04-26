@@ -1,3 +1,4 @@
+//MARK: checkInventory
 //Función Mal Hecha (Hardcodeada y con números "mágicos") de Chequeo de Inventario
 /*
 function checkInventory(prodId4) {

@@ -1,3 +1,4 @@
+//MARK: searchProducts
 //Función 1 de buscar Productos en doEverything, totalmente espaguethi
 //PD: Agregaré comentarios adicionales porque se lee horrible, realmente me pierdo... >:(
 
