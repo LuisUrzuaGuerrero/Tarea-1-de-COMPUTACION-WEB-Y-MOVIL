@@ -59,7 +59,7 @@ function renderProducto(producto) {
   const contarEstrellitas = generarEstrellas(producto.rating);
 
   return `
-    <!-- Comienzo de Visualización -->
+    <!-- Comienzo del render -->
 
     <div class="product-card">
 
