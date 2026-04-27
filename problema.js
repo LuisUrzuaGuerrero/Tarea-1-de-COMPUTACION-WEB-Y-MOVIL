@@ -3,6 +3,133 @@
 // fecha: no se
 // version: final_v2_BUENO_este_si
 
+/*------------------------Maxi Funciones------------------------
+
+//MARK: Función Precio Unificado
+
+//Moneda Chilena
+const TipoDeMondena = new Intl.NumberFormat("es-Cl",{
+  style: "currency",
+  currency: "CLP",
+})
+
+//Transformación Fun. Para entradas Brutas
+function VerificarMoneda(numeroEntrada) {
+  if(numeroEntrada < 0 || typeof numeroEntrada !== "number"){
+    return "Entrada Inválida";
+  }else{
+    return TipoDeMondena.format(numeroEntrada);
+  }
+}
+
+//MARK: Función Inventario Chequeo
+
+//Niveles Del Inventario
+const NivelesInventario = [
+  { Estado: "Agotado", Alerta: true, Limite: 0  },
+  { Estado: "Crítico", Alerta: true, Limite: 5  },
+  { Estado: "Bajo", Alerta: true, Limite: 15  },
+  { Estado: "Normal", Alerta: false, Limite: 30  },
+  { Estado: "Alto", Alerta: false, Limite: Infinity  }
+];
+
+//Busqueda Objeto que sea True, retornando así sus detalles en base al Stock Actual
+function CalcularRango (Stock){
+  if (typeof Stock !== "number" || Stock < 0) {
+    return "Entrada Inválida";
+  }else{
+    const NivelFinal = NivelesInventario.find(nivelTemp => Stock <= nivelTemp.Limite);
+    return { Estado: NivelFinal.Estado, Alerta: NivelFinal.Alerta };
+  }
+}
+
+//MARK: Función Render Producto
+
+//Funcion de generar Estrelas
+function generarEstrellas(rating) {
+  const llenas = Math.floor(rating);
+  const vacias = 5 - llenas;
+  return "★".repeat(llenas) + "☆".repeat(vacias);
+}
+
+function renderProducto(producto) {
+  const precioFormateado = VerificarMoneda(producto.precio);
+  const { Estado, Alerta } = CalcularRango(producto.stock);
+  const contarEstrellitas = generarEstrellas(producto.rating);
+
+  return `
+    <!-- Comienzo del render -->
+
+    <div class="product-card">
+
+    <!-- Img Del Producto y Nombre -->
+      <div class="product-img">
+        <img src="${producto.imagen}" alt="${producto.nombre}">
+        ${Alerta ? `<div class="badge">${Estado}</div>` : ""}
+      </div>
+
+    <!-- Info del Producto -->
+      <div class="product-info">
+        <h3>${producto.nombre}</h3>
+        <div class="rating">${contarEstrellitas} (${producto.rating})</div>
+        <p class="desc">${producto.descripcion}</p>
+        <div class="price">${precioFormateado}</div>
+        <div class="category">Categoría: ${producto.categoria}</div>
+
+    <!-- Botón para agregar si hay disponibilidad -->
+        ${producto.stock > 0
+          ? `<button class="btn-cart" data-id="${producto.id}">Agregar al carro</button>`
+          : `<button class="btn-cart" disabled>No disponible</button>`
+        }
+      </div>
+
+    </div>
+  `;
+
+  
+}
+
+//MARK: Función Buscar Productos
+
+//Función que verifica si la entrada concide con alguna de las propiedades en el producto, importante usar a cada rato el toLowerCase para evitar comparar erroneamente con valores en mayuscula
+function coincideConLaBusqueda(producto, entrada) {
+  if (!entrada) 
+    return true;
+  const bajarLetra = entrada.toLowerCase();
+  const coincideBusqueda = (
+    producto.nombre.toLowerCase().includes(bajarLetra) || producto.descripcion.toLowerCase().includes(bajarLetra)
+    || producto.tags.some(tags => tags.toLowerCase().includes(bajarLetra))
+  );
+  return coincideBusqueda;
+}
+
+//Función que ve si la categoría coincide, si no la deja pasar (true)
+function coincideConCategoria(producto, categoria) {
+  if (!categoria)
+    return true;
+  const coincideCategoria = producto.categoria.toLowerCase() === categoria.toLowerCase();
+  return coincideCategoria;
+}
+
+//Funciónm el cual verifica si está dentro del precio marcado, si no lo está, no lo deja pasar (true)
+function rangoSolicitado(producto, precioMin, precioMax) {
+  const rangoAdecuado = producto.precio >= precioMin && producto.precio <= precioMax;
+  return rangoAdecuado;
+}
+
+//Función Main que reune las anteriores y busca los productos, sin embargo ve si esta activo o no, en caso de no, no muestra nada.
+function busquedaDeProductos(productos, entrada, categoria, precioMin = 0, precioMax = Infinity) {
+  let resultado = productos.filter(producto => producto.activo);
+
+  resultado = resultado.filter(producto => coincideConLaBusqueda(producto, entrada));
+  resultado = resultado.filter(producto => coincideConCategoria(producto, categoria));
+  resultado = resultado.filter(producto => rangoSolicitado(producto, precioMin, precioMax));
+
+  const resultadoFinal = resultado.sort((a, b) => b.rating - a.rating);
+  return resultadoFinal;
+}
+*/
+
 var x = [];
 var x2 = [];
 var x3 = [];
