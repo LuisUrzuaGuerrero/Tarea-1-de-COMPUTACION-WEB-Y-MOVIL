@@ -130,6 +130,237 @@ function busquedaDeProductos(productos, entrada, categoria, precioMin = 0, preci
 }
 
 
+//----------------------Funciones Franco -----------------------
+// ---------------------
+// getStats
+// ---------------------
+//antes habian variables con var  ahora uso const y let
+function getStats(dbUsers, dbProducts, cb) {
+  const userStats = {
+    total: dbUsers.length,
+    //inicio de contador de usuarios activos, bloqueados y por tipo, antes eran totasl user y total activos
+    activos: 0,
+    bloqueados: 0,
+    porTipo: { admin: 0, cliente: 0, vendedor: 0 },
+  };
+ //recorrido de usuarios para contar activos, bloqueados y por tipo
+ //cambio de un for a un for of mas legible
+  for (const user of dbUsers) {
+// antes habia un if == true pero era repetitivo
+    if (user.activo)    userStats.activos++;
+    if (user.bloqueado) userStats.bloqueados++;
+    if (user.tipo in userStats.porTipo) userStats.porTipo[user.tipo]++;
+  }
+ //inicio de contador de productos activos, inactivos, por categoria, stock total y valor del inventario
+
+ const productStats = {
+    total: dbProducts.length,
+    activos: 0,
+    inactivos: 0,
+    porCategoria: {},
+    stockTotal: 0,
+    valorInventario: 0,
+  };
+ //recorrido de productos para contar activos, inactivos, por categoria, stock total y valor del inventario
+  for (const prod of dbProducts) {
+    prod.activo ? productStats.activos++ : productStats.inactivos++;
+    productStats.porCategoria[prod.cat] = (productStats.porCategoria[prod.cat] || 0) + 1;
+    productStats.stockTotal      += prod.stock;
+    productStats.valorInventario += prod.prec * prod.stock;
+  }
+ //devoluciin de estadisticas a traves del callback
+  cb({ ok: true, msg: "ok", data: { usuarios: userStats, productos: productStats } });
+}
+ 
+// ---------------------
+// makeReport
+// ---------------------
+//antes habia 3 funciones separadas para cada tipo cada una repetia la misma logica y variables 
+//agora esta toda en una dependiendo del tipo que se le pase realiza el reporte
+function makeReport(type, from, to, data) {
+  let total = 0;
+  // empiezo con estos valores extremos para que cualquier numero los reemplace
+  let max   = -Infinity;
+  let min   =  Infinity;
+  const lineas = [];
+
+// recorro cada item y segun el tipo saco el valor que necesito
+//antes hbia 3 if separados por un loop ahora es oslo uno que saca el valor necesario
+  for (const item of data) {
+    let val = 0;
+    if (type == "ventas")    val = item.total;
+    if (type == "productos") val = item.prec;
+    if (type == "usuarios")  val = item.puntos;
+
+// voy acumulando para calcular el promedio al final
+    total += val;
+    // actualizo el maximo y minimo si corresponde
+    if (val > max) max = val;
+    if (val < min) min = val;
+//uso de template para concadenar 
+// armo la linea de texto segun el tipo de reporte
+    if (type == "ventas")    lineas.push(`Orden: ${item.id} | Total: $${item.total} | Estado: ${item.estado}`);
+    if (type == "productos") lineas.push(`Producto: ${item.nom} | Precio: $${item.prec} | Stock: ${item.stock} | Rating: ${item.rating}`);
+    if (type == "usuarios")  lineas.push(`Usuario: ${item.nombre} | Email: ${item.email} | Tipo: ${item.tipo} | Puntos: ${item.puntos}`);
+  }
+// divido el total por la cantidad de items para sacar el promedio
+  const avg = total / data.length;
+// armo el reporte como string y lo retorno antes se realizaba una concantenacion 
+  let reporte  = `=== REPORTE DE ${type.toUpperCase()} ===\n`;
+  reporte     += `Desde: ${from} | Hasta: ${to}\n`;
+  reporte     += lineas.join("\n");
+  reporte     += `\nTotal: ${data.length} | Suma: $${total} | Promedio: $${avg.toFixed(2)} | Máx: $${max} | Mín: $${min}`;
+  return reporte;
+}
+// ---------------------
+// sendNotif 
+// ---------------------
+function sendNotif(tipo, userId, msg, data) {
+//antes habian dos funciones que hacian lo mismo deje una sola tambien habian 4 if uno por cada canal y ahora es oslo uno que verifica si es valido
+// defino los canales disponibles y el mensaje que se muestra para cada uno como un diccionario eliminado if innesesarios
+//creacion de un diccionario con los canales y mensaje de cada uno
+const CANALES = {
+    email: "Enviando email",
+    sms:   "Enviando SMS",
+    push:  "Enviando push",
+    inapp: "Guardando notif inapp",
+  };
+ //verifico que el canal sea uno de los indicados si no devuelvo un error de que no es reconocido
+  if (!CANALES[tipo]) {
+    return { tipo, userId, msg, data, sentAt: new Date(), ok: false, err: "tipo no reconocido" };
+  }
+//se realiza una simulacion del envio de la notificacion  
+  console.log(`${CANALES[tipo]} a usuario ${userId}: ${msg}`);
+  return { tipo, userId, msg, data, sentAt: new Date(), ok: true };
+}
+ 
+// ---------------------
+// log
+// ---------------------
+//
+function log(msg, level = "INFO", data = null) {
+  const NIVELES = new Set(["DEBUG", "INFO", "WARN", "ERROR"]);
+  const lvl = NIVELES.has(level) ? level : "INFO";
+  const timestamp = new Date().toISOString();
+  const entry = `[${timestamp}] [${lvl}] ${msg}`;
+  console.log(data ? `${entry} | DATA: ${JSON.stringify(data)}` : entry);
+}
+ 
+// ---------------------
+// paginate 
+// ---------------------
+//antes habian 3 funcoines separadas los 3 hacian lo mismo ahora solo es una para las 3 variables
+function paginate(items, page, size) {
+    //calculo del total de items y paginas necesarias para paginar segun el tamaño indicado
+  const total      = items.length;
+  const totalPages = Math.ceil(total / size);
+  const start      = (page - 1) * size;
+  return {
+    //devuelvo el slice del array segun la pagina y tamaño indicado junto con la informacion de paginacion
+    items: items.slice(start, start + size),
+    page,
+    totalPages,
+    total,
+    size,
+  };
+}
+ 
+// ---------------------
+// sort
+// ---------------------
+//antes habian 3 funciones las cuales hacian lo mismo para cada varibale ahora es solo una generica
+function sort(items, field, order = "asc") {
+    //creo una copia de array para modificiarla y asi no afectar el original
+  return [...items].sort((a, b) => {
+    // comparo los valores de los campos indicados y devuelvo -1, 1 o 0 segun el orden indicado
+    if (a[field] < b[field]) return order === "asc" ? -1 :  1;
+    if (a[field] > b[field]) return order === "asc" ?  1 : -1;
+    // si son iguales devuelvo 0 para mantener el orden original entre ellos
+    return 0;
+  });
+}
+ 
+// ---------------------
+// formatDate
+// ---------------------
+//antes habian 3 funciones para cada tipo de formato de fecha ahora es una generalizada
+//
+function formatDate(fecha, incluirHora = false) {
+//antes se recibia un date object ahora se usa newdate
+  const d = new Date(fecha);
+//antes se usaba un if para agregar el 0 ahora se usa padstatr para agregarlo en una sola linea
+  const dia  = String(d.getDate()).padStart(2, "0");
+//los meses van de 0 por eso se le suma 1 
+  const mes  = String(d.getMonth() + 1).padStart(2, "0");
+  const anio = d.getFullYear();
+ //si no se necesita la hora solo se retorna la fecha en el formato dia mes y año
+  if (!incluirHora) return `${dia}/${mes}/${anio}`;
+ //si se pide la hora agrego las horas minutos y segundos
+  const horas = String(d.getHours()).padStart(2, "0");
+  const mins  = String(d.getMinutes()).padStart(2, "0");
+  const segs  = String(d.getSeconds()).padStart(2, "0");
+ 
+  return `${dia}/${mes}/${anio} ${horas}:${mins}:${segs}`;
+}
+ 
+// ---------------------
+// utils 
+// ---------------------
+//antes habia una sola funcion que habia todo recibia ahora lo separe en funciones independientes
+//primera letra en mayuscula y lo demas en minuscula
+function capitalize(str) {
+//se saca la primera letra y se pone en mayuscula
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
+//corta el string si supera el maximo agregando punto suspensivos al final
+function truncate(str, max) {
+//antes estaba dentro de utils con un if 
+  return str.length > max ? str.substring(0, max) + "..." : str;
+}
+//genera un numero aleatorio entre el minimo y maximo indicado
+function randomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+//convierte un texto a una url replazando los espacion por guines dejando todo en minuscula
+function slugify(str) {
+  return str.toLowerCase().replace(/ /g, "-").replace(/[^\w-]+/g, "");
+}
+function deepClone(val) {
+  return JSON.parse(JSON.stringify(val));
+}
+ 
+function isEmptyObj(obj) {
+  return Object.keys(obj).length === 0;
+}
+//suma de todos los numeros de un arreglo 
+function sumArray(arr) {
+  let total = 0;
+  // antes estaba dentro de utils con reduce
+  // use for...of para que sea mas simple de entender
+  for (const n of arr) total += n;
+  return total;
+}
+
+function avgArray(arr) {
+  // verifico que no este vacio para no dividir por 0
+  if (arr.length == 0) return 0;
+  // reutilizo sumArray para no repetir el loop
+  return sumArray(arr) / arr.length;
+}
+//elimna los duplicados de un arreglo
+function uniqueArray(arr) {
+    //set es una coleccion que no permite dupicados
+  return [...new Set(arr)];
+}
+//aplana un arreglo de arreglos a un solo nivel de profundidad
+function flatArray(arr) {
+    //flat es un metodo que aplana el arreglo
+  return arr.flat();
+}
+
+
+
 var x = [];
 var x2 = [];
 var x3 = [];
