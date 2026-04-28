@@ -1,7 +1,73 @@
+//------------------------Fortem Funciones------------------------
 // sistema de gestion de tienda online
-// hecho por: juan
-// fecha: no se
-// version: final_v2_BUENO_este_si
+// hecho por: Luis Urzúa (Fortem)
+// fecha: 28/04/2026
+// version: Entrega final :)
+
+// Importaciones de Fortem
+const { addToCart } = require ('./services/cart.service');
+const { processCheckout, calculatePricing } = require ('./services/checkout.service');
+const { applyCoupon } = require( './services/coupon.service');
+//hasta aquí mis importaciones
+
+
+
+
+  //Inicio Edicion 001  //contiene: agregar al carrito
+
+  if (action == "addCart")
+  {
+    var prodId = dat;
+    var qty = extraDat;
+    var userId2 = moreData;
+
+    var foundProd = dbProducts.find(p => p.id == prodId);
+    var foundUser = dbUsers.find(u => u.id == userId2);
+
+    //se delega la lógica pesada a nuestro cart.service.js
+    var result = addToCart(foundUser, foundProd, qty);
+
+    cb(result);
+    return;
+  }
+  //fin edicion 001
+
+
+  
+  //Inicio edicion 002 //contiene: proceso de pago y chequeo
+  if(action == "checkout")
+  {
+    var userId3 = dat;
+    var metodoPago = extraDat;
+    var direccion = moreData;
+
+    var foundUser2 = dbUsers.find( u=> u.id == userId3);
+
+    //se delega la lógica de cálculo y orden a checkout.service.js
+    var result = processCheckout(foundUser2, dbProducts, metodoPago, direccion);
+    cb(result);
+    return;
+  }
+  //Fin edicion 002
+
+
+
+// se borra la antigua funcion calc
+
+
+//Hola profe, yo si eliminé el código muerto, XD
+
+
+
+// exportar todo junto sin modularizacion
+module.exports = {
+  //se deberían agregar las referencias de mis compañeros
+  calc: calculatePricing, //apunta a mi nueva funcion
+  cupon: applyCoupon, //apunta a mi nueva funcion
+  //se agregan, mantienen, modifican o eliminan las referencias de mis otros compañeros
+
+  
+  //se borra (calc: calc,)
 
 //------------------------Maxi Funciones------------------------
 
