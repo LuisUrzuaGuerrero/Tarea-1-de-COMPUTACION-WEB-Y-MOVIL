@@ -3,7 +3,7 @@
 // fecha: no se
 // version: final_v2_BUENO_este_si
 
-/*------------------------Maxi Funciones------------------------
+------------------------Maxi Funciones------------------------
 
 //MARK: Función Precio Unificado
 
@@ -128,7 +128,7 @@ function busquedaDeProductos(productos, entrada, categoria, precioMin = 0, preci
   const resultadoFinal = resultado.sort((a, b) => b.rating - a.rating);
   return resultadoFinal;
 }
-*/
+
 
 var x = [];
 var x2 = [];
