@@ -231,15 +231,42 @@ function doEverything(u, p2, action, dat, extraDat, moreData, flag99, cb) {
     return;
   }
 
-  //Edicion 001a  
+  //Inicio Edicion 001  //contiene: agregar al carrito
 
-  //edicion 001b
+  if (action == "addCart")
+  {
+    var prodId dat;
+    var qty = extradat;
+    var userId2 = moreData;
+
+    var foundProd = dbProducts.find(p => p.id == prodId);
+    var foundUser = dbUsers.find(u => u.id == userId2);
+
+    //se delega la lógica pesada a nuestro cart.service.js
+    var result = addToCart(foundUser, foundProd, qty);
+
+    cb(result);
+    return;
+  }
+  //fin edicion 001
 
 
   
-  //edicion 002a
-  
-  //edicion 002b
+  //Inicio edicion 002 //contiene: proceso de pago y chequeo
+  if(action == "checkout")
+  {
+    var userId3 = dat;
+    var matodoPago = extraDat;
+    var direccion = moreData;
+
+    var foundUser2 = dbUsers.find( u=> u.id == userId3);
+
+    //se delega la lógica de cálculo y orden a checkout.service.js
+    var result = processCheckout(foundUser2, dbProducts, metodoPago, direccion);
+    cb(result);
+    return;
+  }
+  //Fin edicion 002
 
   // obtener estadisticas
   if (action == "getStats") {
@@ -1100,6 +1127,12 @@ function utils(op, val, val2, val3) {
 
 // exportar todo junto sin modularizacion
 module.exports = {
+  //se deberían agregar las referencias de mis compañeros
+  calc: calculatePricing, //apunta a mi nueva funcion
+  cupon: applyCoupon, //apunta a mi nueva funcion
+  //se agregan, mantienen, modifican o eliminan las referencias de mis otros compañeros
+
+  
   doEverything: doEverything,
   v: v,
   //se borra (calc: calc,)
