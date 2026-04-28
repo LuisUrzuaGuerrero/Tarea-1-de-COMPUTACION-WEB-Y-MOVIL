@@ -3,6 +3,11 @@
 // fecha: no se
 // version: final_v2_BUENO_este_si
 
+// Importaciones de la Persona 4
+const { addToCart } = require ('./services/cart.service');
+const { processCheckout } = require ('./services/checkout.service');
+const { applyCoupon } = require( './services/coupon.service');
+
 var x = [];
 var x2 = [];
 var x3 = [];
@@ -226,183 +231,15 @@ function doEverything(u, p2, action, dat, extraDat, moreData, flag99, cb) {
     return;
   }
 
-  // agregar al carrito
-  if (action == "addCart") {
-    var prodId = dat;
-    var qty = extraDat;
-    var userId2 = moreData;
-    var foundProd = null;
-    var foundUser = null;
-    for (var i = 0; i < dbProducts.length; i++) {
-      if (dbProducts[i].id == prodId) {
-        foundProd = dbProducts[i];
-        break;
-      }
-    }
-    for (var i = 0; i < dbUsers.length; i++) {
-      if (dbUsers[i].id == userId2) {
-        foundUser = dbUsers[i];
-        break;
-      }
-    }
-    if (foundProd == null) {
-      cb({ ok: false, msg: "producto no encontrado", data: null });
-      return;
-    }
-    if (foundProd.activo == false) {
-      cb({ ok: false, msg: "producto no disponible", data: null });
-      return;
-    }
-    if (foundProd.stock < qty) {
-      cb({ ok: false, msg: "stock insuficiente", data: null });
-      return;
-    }
-    if (foundUser == null) {
-      cb({ ok: false, msg: "usuario no encontrado", data: null });
-      return;
-    }
-    // revisar si ya esta en el carrito
-    var yaEsta = false;
-    for (var i = 0; i < foundUser.carrito.length; i++) {
-      if (foundUser.carrito[i].prodId == prodId) {
-        foundUser.carrito[i].qty = foundUser.carrito[i].qty + qty;
-        yaEsta = true;
-        break;
-      }
-    }
-    if (yaEsta == false) {
-      foundUser.carrito.push({ prodId: prodId, qty: qty, addedAt: new Date() });
-    }
-    // calcular total del carrito
-    var total = 0;
-    for (var i = 0; i < foundUser.carrito.length; i++) {
-      for (var j = 0; j < dbProducts.length; j++) {
-        if (dbProducts[j].id == foundUser.carrito[i].prodId) {
-          total = total + (dbProducts[j].prec * foundUser.carrito[i].qty);
-          break;
-        }
-      }
-    }
-    cb({ ok: true, msg: "producto agregado al carrito", data: { carrito: foundUser.carrito, total: total } });
-    return;
-  }
+  //Edicion 001a  
 
-  // procesar pago y checkout
-  if (action == "checkout") {
-    var userId3 = dat;
-    var metodoPago = extraDat;
-    var direccion = moreData;
-    var foundUser2 = null;
-    for (var i = 0; i < dbUsers.length; i++) {
-      if (dbUsers[i].id == userId3) {
-        foundUser2 = dbUsers[i];
-        break;
-      }
-    }
-    if (foundUser2 == null) {
-      cb({ ok: false, msg: "usuario no encontrado", data: null });
-      return;
-    }
-    if (foundUser2.carrito.length == 0) {
-      cb({ ok: false, msg: "carrito vacio", data: null });
-      return;
-    }
-    // calcular subtotal
-    var subtotal = 0;
-    var itemsOrden = [];
-    for (var i = 0; i < foundUser2.carrito.length; i++) {
-      for (var j = 0; j < dbProducts.length; j++) {
-        if (dbProducts[j].id == foundUser2.carrito[i].prodId) {
-          var itemTotal = dbProducts[j].prec * foundUser2.carrito[i].qty;
-          subtotal = subtotal + itemTotal;
-          itemsOrden.push({ prod: dbProducts[j].nom, qty: foundUser2.carrito[i].qty, precUnit: dbProducts[j].prec, totalItem: itemTotal });
-          break;
-        }
-      }
-    }
-    // aplicar descuentos
-    var descuento = 0;
-    var descuentoMonto = 0;
-    // descuento por nivel
-    if (foundUser2.puntos >= 0 && foundUser2.puntos < 100) {
-      descuento = 0;
-    }
-    if (foundUser2.puntos >= 100 && foundUser2.puntos < 200) {
-      descuento = 5;
-    }
-    if (foundUser2.puntos >= 200 && foundUser2.puntos < 300) {
-      descuento = 10;
-    }
-    if (foundUser2.puntos >= 300) {
-      descuento = 15;
-    }
-    // descuento adicional del usuario
-    descuento = descuento + foundUser2.descuento;
-    descuentoMonto = subtotal * (descuento / 100);
-    var totalConDescuento = subtotal - descuentoMonto;
-    // calcular iva
-    var iva = totalConDescuento * 0.19;
-    var totalFinal = totalConDescuento + iva;
-    // calcular puntos ganados
-    var puntosGanados = Math.floor(totalFinal / 1000);
-    // crear orden
-    var ordenId = "ORD-" + Date.now();
-    var orden = {
-      id: ordenId,
-      userId: userId3,
-      items: itemsOrden,
-      subtotal: subtotal,
-      descuentoPct: descuento,
-      descuentoMonto: descuentoMonto,
-      totalSinIva: totalConDescuento,
-      iva: iva,
-      total: totalFinal,
-      metodoPago: metodoPago,
-      direccion: direccion,
-      estado: "pendiente",
-      puntosGanados: puntosGanados,
-      createdAt: new Date()
-    };
-    // actualizar stock
-    for (var i = 0; i < foundUser2.carrito.length; i++) {
-      for (var j = 0; j < dbProducts.length; j++) {
-        if (dbProducts[j].id == foundUser2.carrito[i].prodId) {
-          dbProducts[j].stock = dbProducts[j].stock - foundUser2.carrito[i].qty;
-          break;
-        }
-      }
-    }
-    // agregar puntos al usuario
-    foundUser2.puntos = foundUser2.puntos + puntosGanados;
-    // limpiar carrito
-    foundUser2.carrito = [];
-    // agregar al historial
-    foundUser2.historial.push(orden);
-    // simular proceso de pago
-    var pagoOk = false;
-    if (metodoPago == "tarjeta") {
-      // simular validacion tarjeta
-      if (flag99 && flag99.numero && flag99.numero.length == 16 && flag99.cvv && flag99.cvv.length == 3) {
-        pagoOk = true;
-      } else {
-        cb({ ok: false, msg: "datos de tarjeta invalidos", data: null });
-        return;
-      }
-    }
-    if (metodoPago == "transferencia") {
-      pagoOk = true;
-    }
-    if (metodoPago == "efectivo") {
-      pagoOk = true;
-    }
-    if (pagoOk == true) {
-      orden.estado = "pagado";
-      cb({ ok: true, msg: "orden creada exitosamente", data: orden });
-    } else {
-      cb({ ok: false, msg: "metodo de pago no valido", data: null });
-    }
-    return;
-  }
+  //edicion 001b
+
+
+  
+  //edicion 002a
+  
+  //edicion 002b
 
   // obtener estadisticas
   if (action == "getStats") {
@@ -746,70 +583,10 @@ function notifyUser(channel, uid, message, payload) {
 }
 
 // manejo de cupones
-function cupon(code, userId, cartTotal, products) {
-  // lista de cupones hardcodeada
-  var cupones = [
-    { code: "DESC10", tipo: "porcentaje", valor: 10, minCompra: 50000, maxUsos: 100, usos: 45, activo: true, expira: "2024-12-31", categorias: [], usuarios: [] },
-    { code: "DESC20", tipo: "porcentaje", valor: 20, minCompra: 100000, maxUsos: 50, usos: 50, activo: true, expira: "2024-06-30", categorias: ["electronica"], usuarios: [] },
-    { code: "ENVGRATIS", tipo: "envio", valor: 100, minCompra: 30000, maxUsos: 200, usos: 180, activo: true, expira: "2024-12-31", categorias: [], usuarios: [] },
-    { code: "BIENVENIDO", tipo: "fijo", valor: 5000, minCompra: 20000, maxUsos: 1000, usos: 523, activo: true, expira: "2025-12-31", categorias: [], usuarios: [] },
-    { code: "VIP2024", tipo: "porcentaje", valor: 25, minCompra: 200000, maxUsos: 20, usos: 15, activo: true, expira: "2024-12-31", categorias: [], usuarios: [1, 3, 5] }
-  ];
-  var found = null;
-  for (var i = 0; i < cupones.length; i++) {
-    if (cupones[i].code == code) {
-      found = cupones[i];
-      break;
-    }
-  }
-  if (found == null) {
-    return { ok: false, msg: "cupon no existe", descuento: 0 };
-  }
-  if (found.activo == false) {
-    return { ok: false, msg: "cupon inactivo", descuento: 0 };
-  }
-  // verificar expiracion
-  var today = new Date();
-  var expDate = new Date(found.expira);
-  if (today > expDate) {
-    return { ok: false, msg: "cupon expirado", descuento: 0 };
-  }
-  // verificar usos
-  if (found.usos >= found.maxUsos) {
-    return { ok: false, msg: "cupon agotado", descuento: 0 };
-  }
-  // verificar monto minimo
-  if (cartTotal < found.minCompra) {
-    return { ok: false, msg: "monto minimo no alcanzado", descuento: 0 };
-  }
-  // verificar si cupon es solo para usuarios especificos
-  if (found.usuarios.length > 0) {
-    var userOk = false;
-    for (var i = 0; i < found.usuarios.length; i++) {
-      if (found.usuarios[i] == userId) {
-        userOk = true;
-        break;
-      }
-    }
-    if (userOk == false) {
-      return { ok: false, msg: "cupon no valido para este usuario", descuento: 0 };
-    }
-  }
-  // calcular descuento
-  var descuentoFinal = 0;
-  if (found.tipo == "porcentaje") {
-    descuentoFinal = cartTotal * (found.valor / 100);
-  }
-  if (found.tipo == "fijo") {
-    descuentoFinal = found.valor;
-    if (descuentoFinal > cartTotal) descuentoFinal = cartTotal;
-  }
-  if (found.tipo == "envio") {
-    descuentoFinal = found.valor; // descuento en envio
-  }
-  found.usos++;
-  return { ok: true, msg: "cupon aplicado", descuento: descuentoFinal, tipo: found.tipo };
-}
+
+//edicion 003a
+
+//edicion 003b
 
 // funcion para buscar (otro duplicado con diferente nombre)
 function search(q, filters) {
@@ -1325,11 +1102,12 @@ function utils(op, val, val2, val3) {
 module.exports = {
   doEverything: doEverything,
   v: v,
-  calc: calc,
+  //se borra (calc: calc,)
+  
   makeReport: makeReport,
   sendNotif: sendNotif,
   notifyUser: notifyUser,
-  cupon: cupon,
+  //se borra (cupon: cupon,)
   search: search,
   fmtPrice: fmtPrice,
   formatearPrecio: formatearPrecio,
