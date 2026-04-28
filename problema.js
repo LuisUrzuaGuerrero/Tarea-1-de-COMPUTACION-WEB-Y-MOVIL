@@ -5,7 +5,7 @@
 
 // Importaciones de la Persona 4
 const { addToCart } = require ('./services/cart.service');
-const { processCheckout } = require ('./services/checkout.service');
+const { processCheckout, calculatePricing } = require ('./services/checkout.service');
 const { applyCoupon } = require( './services/coupon.service');
 
 var x = [];
@@ -235,7 +235,7 @@ function doEverything(u, p2, action, dat, extraDat, moreData, flag99, cb) {
 
   if (action == "addCart")
   {
-    var prodId dat;
+    var prodId = dat;
     var qty = extradat;
     var userId2 = moreData;
 
@@ -256,7 +256,7 @@ function doEverything(u, p2, action, dat, extraDat, moreData, flag99, cb) {
   if(action == "checkout")
   {
     var userId3 = dat;
-    var matodoPago = extraDat;
+    var metodoPago = extraDat;
     var direccion = moreData;
 
     var foundUser2 = dbUsers.find( u=> u.id == userId3);
