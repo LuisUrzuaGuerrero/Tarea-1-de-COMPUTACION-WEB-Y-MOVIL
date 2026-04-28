@@ -1,12 +1,13 @@
 // sistema de gestion de tienda online
-// hecho por: juan
-// fecha: no se
-// version: final_v2_BUENO_este_si
+// hecho por: Luis Urzúa (Fortem)
+// fecha: 28/04/2026
+// version: Entrega final :)
 
-// Importaciones de la Persona 4
+// Importaciones de Fortem
 const { addToCart } = require ('./services/cart.service');
 const { processCheckout, calculatePricing } = require ('./services/checkout.service');
 const { applyCoupon } = require( './services/coupon.service');
+//hasta aquí mis importaciones
 
 var x = [];
 var x2 = [];
@@ -236,7 +237,7 @@ function doEverything(u, p2, action, dat, extraDat, moreData, flag99, cb) {
   if (action == "addCart")
   {
     var prodId = dat;
-    var qty = extradat;
+    var qty = extraDat;
     var userId2 = moreData;
 
     var foundProd = dbProducts.find(p => p.id == prodId);
@@ -381,82 +382,7 @@ function v(cosa, tipo) {
   return r;
 }
 
-// calcular precio con todo
-function calc(p, d, d2, d3, iva, envio, cuotas) {
-  // p = precio base
-  // d = descuento nivel
-  // d2 = descuento cupon
-  // d3 = descuento especial
-  // iva = si aplica iva
-  // envio = costo envio
-  // cuotas = numero cuotas
-  var r = 0;
-  var r2 = 0;
-  var r3 = 0;
-  var r4 = 0;
-  var r5 = 0;
-  var r6 = 0;
-  var r7 = 0;
-  r = p;
-  if (d > 0) {
-    r2 = r * (d / 100);
-    r = r - r2;
-  }
-  if (d2 > 0) {
-    r3 = r * (d2 / 100);
-    r = r - r3;
-  }
-  if (d3 > 0) {
-    r4 = r * (d3 / 100);
-    r = r - r4;
-  }
-  if (iva == true) {
-    r5 = r * 0.19;
-    r = r + r5;
-  }
-  if (envio > 0) {
-    r = r + envio;
-  }
-  r6 = r;
-  if (cuotas > 1) {
-    // agregar interes segun cuotas
-    if (cuotas == 2) {
-      r7 = r * 0.02;
-      r = r + r7;
-    }
-    if (cuotas == 3) {
-      r7 = r * 0.04;
-      r = r + r7;
-    }
-    if (cuotas == 6) {
-      r7 = r * 0.08;
-      r = r + r7;
-    }
-    if (cuotas == 12) {
-      r7 = r * 0.15;
-      r = r + r7;
-    }
-    if (cuotas == 24) {
-      r7 = r * 0.28;
-      r = r + r7;
-    }
-    if (cuotas == 36) {
-      r7 = r * 0.45;
-      r = r + r7;
-    }
-  }
-  return {
-    base: p,
-    dscto1: r2,
-    dscto2: r3,
-    dscto3: r4,
-    subtotal: r6,
-    iva: r5,
-    envio: envio,
-    totalCuota: cuotas > 1 ? r / cuotas : r,
-    total: r
-  };
-}
+// se borra la antigua funcion calc
 
 // funcion de reporte
 function makeReport(type, from, to, data, data2, data3, opts) {
