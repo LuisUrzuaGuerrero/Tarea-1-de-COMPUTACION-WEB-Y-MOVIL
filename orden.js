@@ -14,10 +14,10 @@ const INTERES_CUOTAS = {
 };
 
 function nivelADescuento(puntos) {
+  if (puntos < 100) return 0;
   if (puntos >= 300) return 15;
   if (puntos >= 200) return 10;
   if (puntos >= 100) return 5;
-  return 0;
 }
 
 function calcularPrecioFinal(
